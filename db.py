@@ -1,6 +1,4 @@
 import sqlite3
-from db import get_parts
-from app import find_matches
 
 DB_NAME = "parts_catalogs.db"
 
@@ -51,10 +49,12 @@ def get_parts():
 
     return parts
 
+
 def normalize(value):
     value = str(value).lower().strip()
     value = value.replace(",", ".")
-    return " ".join(value.split())
+    return "".join(value.split())
+
 
 def find_parts(make, model, year, engine, part_request):
     make_n = normalize(make)
