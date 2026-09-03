@@ -1,2 +1,3 @@
 __pycache__/
 .env
+parts_catalogs.db
