@@ -1,10 +1,9 @@
 ﻿from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from app import load_catalog, find_matches
+from db import find_parts
 
 app = FastAPI(title="AI Auto Parts Consultant")
-catalog = load_catalog()
 
 
 class Query(BaseModel):
@@ -185,14 +184,13 @@ async function searchParts() {
 @app.post("/query")
 def query(data: Query):
 
-    matches = find_matches(
-        catalog,
-        data.make,
-        data.model,
-        data.year,
-        data.engine,
-        data.part_request,
-    )
+    matches = find_parts(
+    data.make,
+    data.model,
+    data.year,
+    data.engine,
+    data.part_request,
+)
 
     return {"matches": matches}
 
