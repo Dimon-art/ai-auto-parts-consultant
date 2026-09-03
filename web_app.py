@@ -1,9 +1,15 @@
 ﻿from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
 from db import find_parts
+from ai_assistant import ask_ai
+
 
 app = FastAPI(title="AI Auto Parts Consultant")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 class Query(BaseModel):
@@ -19,12 +25,16 @@ def home():
     return """
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>AI Auto Parts Consultant</title>
 
 <style>
+
 body {
     font-family: Arial, sans-serif;
     background: #f4f6f5;
@@ -42,14 +52,15 @@ body {
     background: white;
     padding: 30px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 h1 {
     color: #155d3a;
 }
 
-input, button {
+input,
+button {
     width: 100%;
     box-sizing: border-box;
     padding: 12px;
@@ -78,105 +89,95 @@ button:hover {
     border-radius: 8px;
 }
 
+.ai-result {
+    margin-top: 20px;
+    padding: 18px;
+    background: #f1f5f3;
+    border-left: 4px solid #26332d;
+    border-radius: 8px;
+}
+
+.ai-result h3 {
+    margin-top: 0;
+    color: #155d3a;
+}
+
 .part {
     margin-bottom: 18px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dfe6e2;
 }
+
+.part:last-child {
+    border-bottom: none;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
+
 <div class="card">
 
 <h1>AI Auto Parts Consultant</h1>
 
-<p>Подбор автозапчастей по автомобилю и двигателю</p>
+<p>
+Подбор автозапчастей по автомобилю и двигателю
+</p>
 
 <label>Марка автомобиля</label>
-<input id="make" placeholder="Volkswagen">
+
+<input
+    id="make"
+    placeholder="Volkswagen"
+>
 
 <label>Модель</label>
-<input id="model" placeholder="Golf">
+
+<input
+    id="model"
+    placeholder="Golf"
+>
 
 <label>Год выпуска</label>
-<input id="year" type="number" placeholder="2018">
+
+<input
+    id="year"
+    type="number"
+    placeholder="2018"
+>
 
 <label>Двигатель</label>
-<input id="engine" placeholder="1.4 TSI">
+
+<input
+    id="engine"
+    placeholder="1.4 TSI"
+>
 
 <label>Какая деталь нужна</label>
-<input id="part_request" placeholder="масляный фильтр">
 
-<button onclick="searchParts()">Найти запчасть</button>
+<input
+    id="part_request"
+    placeholder="масляный фильтр"
+>
+
+<button id="searchButton">
+    Найти запчасть
+</button>
 
 <div id="result"></div>
 
 </div>
+
 </div>
 
-<script>
-async function searchParts() {
-
-    const result = document.getElementById("result");
-
-    result.innerHTML = "Ищу подходящие запчасти...";
-
-    const data = {
-        make: document.getElementById("make").value,
-        model: document.getElementById("model").value,
-        year: Number(document.getElementById("year").value),
-        engine: document.getElementById("engine").value,
-        part_request: document.getElementById("part_request").value
-    };
-
-    try {
-
-        const response = await fetch("/query", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-
-        const json = await response.json();
-
-        if (!json.matches.length) {
-
-            result.innerHTML =
-                "Совпадение не найдено.<br>" +
-                "Уточните автомобиль, двигатель или название детали.";
-
-            return;
-        }
-
-        result.innerHTML = json.matches.map(part => `
-
-            <div class="part">
-
-                <h3>${part.name}</h3>
-
-                <b>OEM:</b> ${part.oem}<br>
-                <b>Категория:</b> ${part.category}<br>
-                <b>Цена:</b> ${part.price} EUR<br>
-                <b>Двигатели:</b> ${part.engines.join(", ")}<br>
-                <b>Совместимость:</b> ${part.fitment_note}
-
-            </div>
-
-        `).join("");
-
-    } catch (error) {
-
-        result.innerHTML =
-            "Ошибка соединения с сервером.";
-
-    }
-}
-</script>
+<script src="/static/app.js"></script>
 
 </body>
+
 </html>
 """
 
@@ -185,14 +186,29 @@ async function searchParts() {
 def query(data: Query):
 
     matches = find_parts(
-    data.make,
-    data.model,
-    data.year,
-    data.engine,
-    data.part_request,
-)
+        data.make,
+        data.model,
+        data.year,
+        data.engine,
+        data.part_request,
+    )
 
-    return {"matches": matches}
+    ai_answer = ""
+
+    if matches:
+        ai_answer = ask_ai(
+            matches[0],
+            data.make,
+            data.model,
+            data.year,
+            data.engine,
+            data.part_request,
+        )
+
+    return {
+        "matches": matches,
+        "ai_answer": ai_answer,
+    }
 
 
 if __name__ == "__main__":
@@ -202,5 +218,5 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="127.0.0.1",
-        port=8023
+        port=8023,
     )
