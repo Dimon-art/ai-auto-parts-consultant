@@ -10,55 +10,118 @@
 
 <body>
 
-    <div class="container">
+    <div class="page">
 
-        <header>
-            <h1>AI Auto Parts Consultant</h1>
-            <p class="subtitle">Подбор автозапчастей по автомобилю и двигателю</p>
+        <header class="topbar">
+            <p class="brand">AI Auto Parts Consultant</p>
+            <p class="tagline">Умный подбор автозапчастей</p>
         </header>
 
-        <div class="form-section">
+        <section class="hero">
+            <h1>Подберём подходящую запчасть</h1>
+            <p class="lead">
+                Укажите автомобиль и деталь — AI объяснит результат и покажет подходящие варианты.
+            </p>
+        </section>
 
-            <div class="car-fields">
+        <div class="layout">
 
-                <div class="field">
-                    <label for="make">Марка автомобиля</label>
-                    <input id="make" placeholder="Volkswagen">
-                </div>
+            <aside class="sidebar" aria-labelledby="categories-title">
+                <p class="sidebar-label" id="categories-title">Категории</p>
+                <nav class="categories">
+                    <button type="button" class="category-btn" data-category="Масла и жидкости">Масла и жидкости</button>
+                    <button type="button" class="category-btn" data-category="Фильтры">Фильтры</button>
+                    <button type="button" class="category-btn" data-category="Тормозная система">Тормозная система</button>
+                    <button type="button" class="category-btn" data-category="Подвеска">Подвеска</button>
+                    <button type="button" class="category-btn" data-category="Двигатель">Двигатель</button>
+                    <button type="button" class="category-btn" data-category="Электрика">Электрика</button>
+                    <button type="button" class="category-btn" data-category="Кузовные детали">Кузовные детали</button>
+                </nav>
+            </aside>
 
-                <div class="field">
-                    <label for="model">Модель</label>
-                    <input id="model" placeholder="Golf">
-                </div>
+            <div class="main">
 
-                <div class="field">
-                    <label for="year">Год выпуска</label>
-                    <input id="year" type="number" placeholder="2018">
-                </div>
+                <section class="form-section" aria-labelledby="form-title">
+                    <h2 id="form-title" class="visually-hidden">Параметры поиска</h2>
 
-                <div class="field">
-                    <label for="engine">Двигатель</label>
-                    <input id="engine" placeholder="1.4 TSI">
-                </div>
+                    <form id="searchForm" novalidate>
+
+                        <div class="car-fields">
+                            <div class="field">
+                                <label for="make">Марка</label>
+                                <select id="make" name="make" required>
+                                    <option value="">Выберите марку</option>
+                                </select>
+                                <p class="field-error" id="make-error" hidden></p>
+                            </div>
+
+                            <div class="field">
+                                <label for="model">Модель</label>
+                                <select id="model" name="model" required disabled>
+                                    <option value="">Выберите модель</option>
+                                </select>
+                                <p class="field-error" id="model-error" hidden></p>
+                            </div>
+
+                            <div class="field">
+                                <label for="year">Год</label>
+                                <select id="year" name="year" required disabled>
+                                    <option value="">Выберите год</option>
+                                </select>
+                                <p class="field-error" id="year-error" hidden></p>
+                            </div>
+
+                            <div class="field">
+                                <label for="engine">Двигатель</label>
+                                <select id="engine" name="engine" disabled>
+                                    <option value="">Необязательно</option>
+                                </select>
+                                <p class="field-error" id="engine-error" hidden></p>
+                            </div>
+                        </div>
+
+                        <div class="field field-wide">
+                            <label for="part_request">Какая деталь нужна?</label>
+                            <input
+                                id="part_request"
+                                name="part_request"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="Например: масляный фильтр, тормозные колодки, свечи"
+                                required
+                            >
+                            <p class="field-error" id="part_request-error" hidden></p>
+                        </div>
+
+                        <button id="searchButton" type="submit">🔎 Найти запчасть</button>
+
+                    </form>
+                </section>
+
+                <section class="results-section" aria-live="polite">
+                    <div id="result"></div>
+                </section>
 
             </div>
-
-            <div class="field field-wide">
-                <label for="part_request">Какая деталь нужна?</label>
-                <input id="part_request" placeholder="масляный фильтр">
-            </div>
-
-            <button id="searchButton" type="button">
-                Найти запчасть
-            </button>
 
         </div>
 
-        <section class="answer-block" aria-labelledby="answer-title">
-            <h2 id="answer-title">Ответ консультанта</h2>
-            <div id="result"></div>
-        </section>
+    </div>
 
+    <div id="vinModal" class="modal" hidden>
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vin-modal-title">
+            <button type="button" class="modal-close" data-close-modal aria-label="Закрыть">×</button>
+            <h2 id="vin-modal-title">Проверить по VIN</h2>
+            <p class="modal-lead">Введите VIN автомобиля для уточнения совместимости.</p>
+            <label class="visually-hidden" for="vinInput">VIN</label>
+            <input id="vinInput" type="text" maxlength="17" placeholder="17 символов VIN" autocomplete="off">
+            <p id="vinMessage" class="vin-message" hidden></p>
+            <div class="modal-actions">
+                <button type="button" id="vinCheckButton" class="btn-primary">Проверить</button>
+                <button type="button" class="btn-secondary" data-close-modal>Закрыть</button>
+            </div>
+        </div>
     </div>
 
     <script src="/static/app.js"></script>
