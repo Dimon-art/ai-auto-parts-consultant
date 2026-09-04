@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: ai-auto-parts-consultant
+    ports:
+      - "8023:8023"
+    env_file:
+      - .env
+    volumes:
+      - parts_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  parts_data:
