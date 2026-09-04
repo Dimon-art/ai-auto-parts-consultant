@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Auto Parts Consultant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>AI Auto Parts Consultant</h1>
+            <p class="subtitle">Подбор автозапчастей по автомобилю и двигателю</p>
+        </header>
+
+        <div class="form-section">
+
+            <div class="car-fields">
+
+                <div class="field">
+                    <label for="make">Марка автомобиля</label>
+                    <input id="make" placeholder="Volkswagen">
+                </div>
+
+                <div class="field">
+                    <label for="model">Модель</label>
+                    <input id="model" placeholder="Golf">
+                </div>
+
+                <div class="field">
+                    <label for="year">Год выпуска</label>
+                    <input id="year" type="number" placeholder="2018">
+                </div>
+
+                <div class="field">
+                    <label for="engine">Двигатель</label>
+                    <input id="engine" placeholder="1.4 TSI">
+                </div>
+
+            </div>
+
+            <div class="field field-wide">
+                <label for="part_request">Какая деталь нужна?</label>
+                <input id="part_request" placeholder="масляный фильтр">
+            </div>
+
+            <button id="searchButton" type="button">
+                Найти запчасть
+            </button>
+
+        </div>
+
+        <section class="answer-block" aria-labelledby="answer-title">
+            <h2 id="answer-title">Ответ консультанта</h2>
+            <div id="result"></div>
+        </section>
+
+    </div>
+
+    <script src="/static/app.js"></script>
+
+</body>
+
+</html>

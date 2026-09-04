@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /data && ln -s /data/parts_catalogs.db /app/parts_catalogs.db
+RUN mkdir -p /app/data && ln -sfn /app/data/parts_catalogs.db /app/parts_catalogs.db
 
 EXPOSE 8023
 

@@ -56,34 +56,55 @@ async function searchParts() {
         }
 
 
-        const partsHtml = json.matches.map(part => `
+        const partsHtml = json.matches.map(part => {
+
+            const car = [
+                part.make,
+                part.model,
+                part.year_from && part.year_to
+                    ? `${part.year_from}–${part.year_to}`
+                    : ""
+            ].filter(Boolean).join(" ");
+
+            const engines = Array.isArray(part.engines)
+                ? part.engines.map(escapeHtml).join(", ")
+                : escapeHtml(part.engines || "—");
+
+            return `
 
             <div class="part">
 
                 <h3>${escapeHtml(part.name)}</h3>
 
-                <b>OEM:</b>
-                ${escapeHtml(part.oem)}
-                <br>
+                <dl class="part-meta">
 
-                <b>Категория:</b>
-                ${escapeHtml(part.category)}
-                <br>
+                    <dt>OEM</dt>
+                    <dd>${escapeHtml(part.oem || "—")}</dd>
 
-                <b>Цена:</b>
-                ${part.price} EUR
-                <br>
+                    <dt>Категория</dt>
+                    <dd>${escapeHtml(part.category || "—")}</dd>
 
-                <b>Двигатели:</b>
-                ${part.engines.map(escapeHtml).join(", ")}
-                <br>
+                    <dt>Автомобиль</dt>
+                    <dd>${escapeHtml(car || "—")}</dd>
 
-                <b>Совместимость:</b>
-                ${escapeHtml(part.fitment_note)}
+                    <dt>Двигатель</dt>
+                    <dd>${engines || "—"}</dd>
+
+                    <dt>Цена</dt>
+                    <dd>${part.price != null ? `${escapeHtml(part.price)} EUR` : "—"}</dd>
+
+                    <dt>Совместимость</dt>
+                    <dd>${escapeHtml(part.fitment_note || "—")}</dd>
+
+                    <dt>Примечания</dt>
+                    <dd>${escapeHtml(part.notes || "—")}</dd>
+
+                </dl>
 
             </div>
 
-        `).join("");
+        `;
+        }).join("");
 
 
         let aiHtml = "";
@@ -95,7 +116,7 @@ async function searchParts() {
 
                 <div class="ai-result">
 
-                    <h3>🤖 AI-консультант</h3>
+                    <h3>AI-консультант</h3>
 
                     <div>
                         ${formatAIAnswer(json.ai_answer)}

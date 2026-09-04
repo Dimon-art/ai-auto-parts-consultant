@@ -1,0 +1,221 @@
+:root {
+    --bg: #ffffff;
+    --surface: #f7f8f7;
+    --text: #2f3532;
+    --muted: #6b746e;
+    --border: #d8ddd9;
+    --green: #0f5c3a;
+    --green-hover: #0a472c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 20px 56px;
+}
+
+header {
+    margin-bottom: 28px;
+}
+
+h1 {
+    margin: 0 0 8px;
+    font-size: 1.75rem;
+    font-weight: 650;
+    color: var(--green);
+}
+
+.subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.98rem;
+}
+
+.form-section {
+    margin-bottom: 24px;
+}
+
+.car-fields {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.field-wide {
+    margin-bottom: 14px;
+}
+
+label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+}
+
+input:focus {
+    outline: 2px solid rgba(15, 92, 58, 0.25);
+    border-color: var(--green);
+}
+
+button {
+    width: 100%;
+    padding: 13px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--green);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--green-hover);
+}
+
+.answer-block {
+    margin-top: 28px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.answer-block > h2 {
+    margin: 0 0 14px;
+    font-size: 1.1rem;
+    font-weight: 650;
+    color: var(--green);
+}
+
+#result:empty::before {
+    content: "Здесь появятся найденные запчасти и ответ AI.";
+    display: block;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.result {
+    padding: 0;
+    margin: 0;
+}
+
+.result > h2 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.part {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.part:first-of-type {
+    padding-top: 0;
+}
+
+.part:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.part h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: var(--green);
+}
+
+.part-meta {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+.part-meta dt {
+    float: left;
+    clear: left;
+    width: 9.5rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.part-meta dd {
+    margin: 0 0 6px 9.5rem;
+}
+
+.ai-result {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.ai-result h3 {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    color: var(--green);
+}
+
+@media (max-width: 800px) {
+    .car-fields {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .container {
+        padding: 28px 16px 40px;
+    }
+
+    .car-fields {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 1.45rem;
+    }
+
+    .part-meta dt,
+    .part-meta dd {
+        float: none;
+        width: auto;
+        margin-left: 0;
+    }
+
+    .part-meta dt {
+        margin-bottom: 2px;
+    }
+
+    .part-meta dd {
+        margin-bottom: 10px;
+    }
+}
