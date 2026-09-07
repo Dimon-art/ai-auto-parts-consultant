@@ -90,3 +90,26 @@ def get_search_tree(car_id, car_type="PC", lang=16):
 
     response.raise_for_status()
     return response.json()
+
+
+def get_articles(str_id, car_id, car_type="PC", lang=16):
+    api_key = os.getenv("PARTSAPI_GETARTICLES_KEY")
+
+    if not api_key:
+        raise RuntimeError("PARTSAPI_GETARTICLES_KEY not found in .env")
+
+    response = requests.get(
+        BASE_URL,
+        params={
+            "method": "getArticles",
+            "key": api_key,
+            "carType": car_type,
+            "strId": str_id,
+            "carId": car_id,
+            "lang": lang,
+        },
+        timeout=30,
+    )
+
+    response.raise_for_status()
+    return response.json()
