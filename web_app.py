@@ -5,7 +5,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from db import find_parts
+from db import find_parts_by_fitment
+#from db import find_parts
 from ai_assistant import ask_ai
 
 
@@ -32,7 +33,7 @@ def home():
 @app.post("/query")
 def query(data: Query):
 
-    matches = find_parts(
+    matches = find_parts_by_fitment(
         data.make,
         data.model,
         data.year,
