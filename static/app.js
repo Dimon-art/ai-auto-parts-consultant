@@ -10,7 +10,7 @@ const VEHICLE_CATALOG = {
         Golf: {
             yearFrom: 2013,
             yearTo: 2020,
-            engines: ["1.4 TSI", "1.5 TSI", "2.0 TDI"]
+            engines: ["1.0L TSI 6MT FWD (110 HP)", "1.0L TSI 7AT FWD (110 HP)", "1.4 TSI", "1.5 TSI", "2.0 TDI"]
         },
         Passat: {
             yearFrom: 2015,
@@ -20,7 +20,7 @@ const VEHICLE_CATALOG = {
         Tiguan: {
             yearFrom: 2016,
             yearTo: 2024,
-            engines: ["1.4 TSI", "2.0 TSI", "2.0 TDI"]
+            engines: ["1.0 TSI", "1.4 TSI", "1.5 TSI", "2.0 TDI"]
         }
     },
     Nissan: {
@@ -537,47 +537,60 @@ function renderResults(json, partRequest) {
 
 
 function renderPartCard(part) {
-    const car = [
-        part.make,
-        part.model,
-        part.year_from && part.year_to
-            ? part.year_from + "–" + part.year_to
-            : ""
-    ].filter(Boolean).join(" ");
+    const articleNumber = part.article_number || "—";
+    const brand = part.brand || "—";
+    const productGroup = part.product_group || "Запчасть";
+    const oem = part.oem_numbers || "—";
+    const engine = part.engine || "—";
 
-    const engines = Array.isArray(part.engines)
-        ? part.engines.map(escapeHtml).join(", ")
-        : escapeHtml(part.engines || "—");
+    const criteria = part.article_criteria || "";
 
-    const price = part.price != null
-        ? escapeHtml(part.price) + " EUR"
-        : "—";
+    const fitment = escapeHtml(
+        part.fitment_confirmed
+            ? "Совместимость подтверждена каталогом PartsAPI для выбранного автомобиля и детали."
+            : "Предварительная совместимость — требуется проверка VIN."
+    );
 
-    const fitment = buildFitmentText(part.fitment_note);
-    const icon = isFilterOrEnginePart(part) ? "⚙" : "🚘";
+    const icon = isFilterOrEnginePart({
+        category: productGroup,
+        name: productGroup
+    }) ? "⚙" : "🚘";
 
     return `
         <article class="part-card">
             <div class="part-card-header">
                 <div class="part-icon" aria-hidden="true">${icon}</div>
                 <div>
-                    <h3>${escapeHtml(part.name || "Запчасть")}</h3>
-                    <p class="part-category">${escapeHtml(part.category || "—")}</p>
+                    <h3>${escapeHtml(productGroup)}</h3>
+                    <p class="part-category">${escapeHtml(brand)}</p>
                 </div>
             </div>
+
             <dl class="part-meta">
+                <dt>Артикул</dt>
+                <dd>${escapeHtml(articleNumber)}</dd>
+
+                <dt>Бренд</dt>
+                <dd>${escapeHtml(brand)}</dd>
+
                 <dt>OEM</dt>
-                <dd>${escapeHtml(part.oem || "—")}</dd>
-                <dt>Автомобиль</dt>
-                <dd>${escapeHtml(car || "—")}</dd>
+                <dd>${escapeHtml(oem)}</dd>
+
                 <dt>Двигатель</dt>
-                <dd>${engines || "—"}</dd>
-                <dt>Цена</dt>
-                <dd>${price}</dd>
+                <dd>${escapeHtml(engine)}</dd>
             </dl>
+
+            ${criteria ? `
+            <div class="fitment-note">
+                <strong>Характеристики:</strong>
+                ${escapeHtml(criteria)}
+            </div>
+            ` : ""}
+
             <div class="fitment-note">
                 <strong>Совместимость:</strong> ${fitment}
             </div>
+
             <div class="part-actions">
                 <button type="button" data-action="compare">Сравнить</button>
                 <button type="button" data-action="save">Сохранить</button>
@@ -586,8 +599,6 @@ function renderPartCard(part) {
         </article>
     `;
 }
-
-
 function buildFitmentText(note) {
     const raw = String(note || "").trim();
     if (!raw) {
