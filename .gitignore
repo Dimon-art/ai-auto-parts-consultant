@@ -1,5 +1,6 @@
 __pycache__/
 .env
+.venv/
 parts_catalogs.db
 # Local catalog and database backups
 backup/
