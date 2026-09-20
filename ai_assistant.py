@@ -1,125 +1,64 @@
-﻿import os
+﻿"""AI-консультант для подбора автозапчастей (DeepSeek API)."""
+import os
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
+DEEPSEEK_MODEL = "deepseek-chat"
+TIMEOUT = 30
 
-VSEGPT_URL = "https://api.vsegpt.ru/v1/chat/completions"
+
+def _get_api_key() -> str | None:
+    return os.getenv("DEEPSEEK_API_KEY") or os.getenv("VSEGPT_API_KEY")
 
 
-def ask_ai(part, make, model, year, engine, user_request):
-    api_key = os.getenv("VSEGPT_API_KEY")
+def _build_prompt(part: dict, make: str, model: str, year: int, engine: str) -> str:
+    name = part.get("name", "")
+    oem = part.get("oem", "")
+    fitment = part.get("fitment_note", "")
+    engines = ", ".join(part.get("engines", []))
+    return (
+        f"Ты — консультант по автозапчастям. Клиент ищет деталь для автомобиля.\n\n"
+        f"Автомобиль: {make} {model}, {year} г., двигатель {engine}\n"
+        f"Запрос клиента: {name}\n"
+        f"Найденная позиция:\n"
+        f"  - Название: {name}\n"
+        f"  - OEM: {oem}\n"
+        f"  - Двигатели: {engines}\n"
+        f"  - Примечание: {fitment}\n\n"
+        f"Дай короткое объяснение (2–4 предложения) на русском:\n"
+        f"1. Почему эта деталь подходит.\n"
+        f"2. На что обратить внимание при покупке.\n"
+        f"Без воды, по делу."
+    )
 
+
+def ask_ai(part: dict, make: str, model: str, year: int, engine: str = "") -> str:
+    api_key = _get_api_key()
     if not api_key:
-        return "ИИ временно недоступен: VSEGPT_API_KEY не найден."
+        return "ИИ временно недоступен: DEEPSEEK_API_KEY не найден."
 
-    oem_numbers = part.get("oem_numbers") or ""
-    ean_numbers = part.get("ean_numbers") or ""
-    criteria = part.get("article_criteria") or ""
-
-    prompt = f"""
-Ты AI-консультант по автозапчастям.
-
-Объясни пользователю результат, который уже найден каталогом PartsAPI.
-
-ДАННЫЕ АВТОМОБИЛЯ:
-Марка: {make}
-Модель: {model}
-Год: {year}
-Двигатель: {engine or "не указан"}
-
-ЗАПРОС КЛИЕНТА:
-{user_request}
-
-ДАННЫЕ ИЗ PARTSAPI:
-Артикул: {part.get("article_number") or "нет данных"}
-Бренд: {part.get("brand") or "нет данных"}
-Группа детали: {part.get("product_group") or "нет данных"}
-OEM: {oem_numbers or "нет данных"}
-EAN: {ean_numbers or "нет данных"}
-Критерии: {criteria or "нет данных"}
-Статус: {part.get("status") or "нет данных"}
-
-ПОДТВЕРЖДЕНИЕ СОВМЕСТИМОСТИ:
-Источник: {part.get("fitment_source") or "нет данных"}
-CAR_ID: {part.get("car_id") or "нет данных"}
-STR_ID: {part.get("str_id") or "нет данных"}
-Совместимость подтверждена каталогом: {part.get("fitment_confirmed")}
-
-СТРОГИЕ ПРАВИЛА:
-
-1. Используй только переданные данные.
-2. Ничего не придумывай.
-3. Не придумывай OEM, аналоги, размеры, производителей, цены или характеристики.
-4. Не утверждай дополнительных свойств детали, которых нет в данных.
-5. Учитывай, что совместимость подтверждена связью PartsAPI для выбранного автомобиля и категории детали.
-6. Если нужной информации нет, напиши: "В каталоге нет данных."
-7. Ответ должен быть коротким и понятным.
-8. Ответ только на русском языке.
-
-Формат:
-
-Подходит:
-[краткий вывод]
-
-Артикул:
-[артикул]
-
-Бренд:
-[бренд]
-
-OEM:
-[OEM или "В каталоге нет данных."]
-
-Почему:
-[краткое объяснение на основании данных PartsAPI]
-
-Важно:
-[только действительно необходимое замечание]
-"""
-
+    prompt = _build_prompt(part, make, model, year, engine)
+    payload = {
+        "model": DEEPSEEK_MODEL,
+        "messages": [
+            {"role": "system", "content": "Ты краткий технический консультант по автозапчастям."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 400,
+    }
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
 
-    payload = {
-        "model": "openai/gpt-4o-mini",
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Ты консультант по автозапчастям. "
-                    "Работай только с переданными данными PartsAPI. "
-                    "Никогда не выдумывай отсутствующую информацию."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        "temperature": 0,
-    }
-
     try:
-        response = requests.post(
-            VSEGPT_URL,
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        return data["choices"][0]["message"]["content"]
-
+        r = requests.post(DEEPSEEK_URL, json=payload, headers=headers, timeout=TIMEOUT)
+        r.raise_for_status()
+        data = r.json()
+        return data["choices"][0]["message"]["content"].strip()
+    except requests.HTTPError as e:
+        return f"ИИ временно недоступен: ошибка API ({e.response.status_code})."
     except Exception as e:
-        print("VseGPT error:", e)
-
-        return (
-            "ИИ временно недоступен. "
-            "Данные найденных запчастей показаны из каталога PartsAPI."
-        )
+        print("DeepSeek error:", e)
+        return "ИИ временно недоступен. Попробуйте позже."
