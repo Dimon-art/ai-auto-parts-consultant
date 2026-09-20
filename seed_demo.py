@@ -11,7 +11,7 @@ if not DB_PATH.exists():
 
 conn = sqlite3.connect(DB_PATH)
 
-# ---- Пересоздаём таблицы, чтобы гарантировать правильные колонки ----
+# ---- Пересоздаём таблицы с правильными колонками ----
 conn.executescript("""
 DROP TABLE IF EXISTS fitments;
 DROP TABLE IF EXISTS engines;
@@ -45,6 +45,8 @@ CREATE TABLE engines (
     generation_id INTEGER NOT NULL,
     label TEXT NOT NULL,
     code TEXT,
+    partsapi_car_id INTEGER,
+    partsapi_str_id INTEGER,
     FOREIGN KEY(generation_id) REFERENCES generations(id)
 );
 
@@ -85,7 +87,7 @@ conn.commit()
 golf_gen = conn.execute("SELECT id FROM generations WHERE model_id=?", (golf_id,)).fetchone()[0]
 qash_gen = conn.execute("SELECT id FROM generations WHERE model_id=?", (qash_id,)).fetchone()[0]
 
-# ---- Двигатели (label вместо name) ----
+# ---- Двигатели (label + partsapi-колонки) ----
 conn.execute("INSERT INTO engines (generation_id, label, code) VALUES (?, ?, ?)",
              (golf_gen, "1.4 TSI", "CZDA"))
 conn.execute("INSERT INTO engines (generation_id, label, code) VALUES (?, ?, ?)",
@@ -98,7 +100,7 @@ conn.commit()
 
 engines = {row[1]: row[0] for row in conn.execute("SELECT id, label FROM engines").fetchall()}
 
-# ---- Fitments: связываем все 6 запчастей ----
+# ---- Fitments ----
 parts = conn.execute("SELECT id, make, model, name FROM parts").fetchall()
 
 for part_id, make, model, name in parts:
