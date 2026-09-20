@@ -11,21 +11,27 @@ if not DB_PATH.exists():
 
 conn = sqlite3.connect(DB_PATH)
 
-# ---- Таблицы ----
+# ---- Пересоздаём таблицы, чтобы гарантировать правильные колонки ----
 conn.executescript("""
-CREATE TABLE IF NOT EXISTS makes (
+DROP TABLE IF EXISTS fitments;
+DROP TABLE IF EXISTS engines;
+DROP TABLE IF EXISTS generations;
+DROP TABLE IF EXISTS models;
+DROP TABLE IF EXISTS makes;
+
+CREATE TABLE makes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS models (
+CREATE TABLE models (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     make_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     FOREIGN KEY(make_id) REFERENCES makes(id)
 );
 
-CREATE TABLE IF NOT EXISTS generations (
+CREATE TABLE generations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     model_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -34,15 +40,15 @@ CREATE TABLE IF NOT EXISTS generations (
     FOREIGN KEY(model_id) REFERENCES models(id)
 );
 
-CREATE TABLE IF NOT EXISTS engines (
+CREATE TABLE engines (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     generation_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
+    label TEXT NOT NULL,
     code TEXT,
     FOREIGN KEY(generation_id) REFERENCES generations(id)
 );
 
-CREATE TABLE IF NOT EXISTS fitments (
+CREATE TABLE fitments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     part_id INTEGER NOT NULL,
     engine_id INTEGER NOT NULL,
@@ -51,52 +57,52 @@ CREATE TABLE IF NOT EXISTS fitments (
     FOREIGN KEY(engine_id) REFERENCES engines(id)
 );
 """)
+conn.commit()
 
 # ---- Марки ----
-conn.execute("INSERT OR IGNORE INTO makes (name) VALUES (?)", ("Volkswagen",))
-conn.execute("INSERT OR IGNORE INTO makes (name) VALUES (?)", ("Nissan",))
+conn.execute("INSERT INTO makes (name) VALUES (?)", ("Volkswagen",))
+conn.execute("INSERT INTO makes (name) VALUES (?)", ("Nissan",))
 conn.commit()
 
 vw_id = conn.execute("SELECT id FROM makes WHERE name=?", ("Volkswagen",)).fetchone()[0]
 ni_id = conn.execute("SELECT id FROM makes WHERE name=?", ("Nissan",)).fetchone()[0]
 
 # ---- Модели ----
-conn.execute("INSERT OR IGNORE INTO models (make_id, name) VALUES (?, ?)", (vw_id, "Golf"))
-conn.execute("INSERT OR IGNORE INTO models (make_id, name) VALUES (?, ?)", (ni_id, "Qashqai"))
+conn.execute("INSERT INTO models (make_id, name) VALUES (?, ?)", (vw_id, "Golf"))
+conn.execute("INSERT INTO models (make_id, name) VALUES (?, ?)", (ni_id, "Qashqai"))
 conn.commit()
 
 golf_id = conn.execute("SELECT id FROM models WHERE name=?", ("Golf",)).fetchone()[0]
 qash_id = conn.execute("SELECT id FROM models WHERE name=?", ("Qashqai",)).fetchone()[0]
 
 # ---- Поколения ----
-conn.execute("INSERT OR IGNORE INTO generations (model_id, name, year_start, year_end) VALUES (?, ?, ?, ?)",
+conn.execute("INSERT INTO generations (model_id, name, year_start, year_end) VALUES (?, ?, ?, ?)",
              (golf_id, "Mk7", 2012, 2020))
-conn.execute("INSERT OR IGNORE INTO generations (model_id, name, year_start, year_end) VALUES (?, ?, ?, ?)",
+conn.execute("INSERT INTO generations (model_id, name, year_start, year_end) VALUES (?, ?, ?, ?)",
              (qash_id, "J11", 2014, 2021))
 conn.commit()
 
 golf_gen = conn.execute("SELECT id FROM generations WHERE model_id=?", (golf_id,)).fetchone()[0]
 qash_gen = conn.execute("SELECT id FROM generations WHERE model_id=?", (qash_id,)).fetchone()[0]
 
-# ---- Двигатели ----
-conn.execute("INSERT OR IGNORE INTO engines (generation_id, name, code) VALUES (?, ?, ?)",
+# ---- Двигатели (label вместо name) ----
+conn.execute("INSERT INTO engines (generation_id, label, code) VALUES (?, ?, ?)",
              (golf_gen, "1.4 TSI", "CZDA"))
-conn.execute("INSERT OR IGNORE INTO engines (generation_id, name, code) VALUES (?, ?, ?)",
+conn.execute("INSERT INTO engines (generation_id, label, code) VALUES (?, ?, ?)",
              (golf_gen, "1.0 TSI", "CHZD"))
-conn.execute("INSERT OR IGNORE INTO engines (generation_id, name, code) VALUES (?, ?, ?)",
+conn.execute("INSERT INTO engines (generation_id, label, code) VALUES (?, ?, ?)",
              (qash_gen, "1.2 DIG-T", "HRA2"))
-conn.execute("INSERT OR IGNORE INTO engines (generation_id, name, code) VALUES (?, ?, ?)",
+conn.execute("INSERT INTO engines (generation_id, label, code) VALUES (?, ?, ?)",
              (qash_gen, "2.0 CVT", "MR20"))
 conn.commit()
 
-engines = {row[1]: row[0] for row in conn.execute("SELECT id, name FROM engines").fetchall()}
+engines = {row[1]: row[0] for row in conn.execute("SELECT id, label FROM engines").fetchall()}
 
 # ---- Fitments: связываем все 6 запчастей ----
 parts = conn.execute("SELECT id, make, model, name FROM parts").fetchall()
 
 for part_id, make, model, name in parts:
     if make == "Volkswagen" and model == "Golf":
-        # каждая запчасть VW → оба двигателя Golf
         for eng in ["1.4 TSI", "1.0 TSI"]:
             conn.execute("INSERT INTO fitments (part_id, engine_id, note) VALUES (?, ?, ?)",
                          (part_id, engines[eng], "Подходит для Golf Mk7"))
